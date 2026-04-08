@@ -17,6 +17,11 @@ A local utility tool that automates headless browser instances to monitor websit
 4. **Stealth Mode**: By default, the browser masks standard `navigator.webdriver` indicators, normalizes `User-Agent` to Microsoft Edge, and injects mock plugin arrays to mitigate basic automated bot detection.
 5. **Standalone Execution**: Uses `@yao-pkg/pkg` to package the entire project into a single `Observer.exe` file. Instead of downloading heavy standalone Chromium binaries, the config binds Playwright to the native Microsoft Edge channel installed on standard Windows machines.
 
+## Prerequisites
+
+- **Node.js**: Version 16.x or higher
+- **Microsoft Edge**: Required for the default browser channel (can be configured to Chrome/Chromium in settings)
+
 ## Running the Project
 
 If you have downloaded the source code directly:
