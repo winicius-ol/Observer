@@ -1,4 +1,4 @@
-# Observer
+# <img src="logo.png" width="40" height="40" valign="middle"> Observer
 
 A local utility tool that automates headless browser instances to monitor website network requests. When a specific network response or URL matches a user-defined regex, the bot triggers automated notifications or runs custom macros.
 
