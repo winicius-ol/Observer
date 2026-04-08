@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robô da Fila - Network Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Configuration -->
+        <aside class="sidebar">
+            <h1 class="logo">Robô da Fila ⚡</h1>
+            <p class="subtitle">Network Response Monitor</p>
+
+            <form id="setup-form">
+                
+                <div class="form-group">
+                    <label for="target-url">Initial Target URL (Optional)</label>
+                    <input type="text" id="target-url" placeholder="https://example.com" />
+                </div>
+
+                <div class="form-group">
+                    <label for="regex-pattern">Trigger Regex (Response Body / URL)</label>
+                    <input type="text" id="regex-pattern" placeholder="e.g. /success|available/i" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="headless" />
+                        Run Headless (Hidden Browser)
+                    </label>
+                </div>
+
+                <div class="form-group actions-group">
+                    <label>Actions on Match (Multiselect)</label>
+                    
+                    <label class="checkbox-label action-check">
+                        <input type="checkbox" name="action" value="audio" checked>
+                        Play Audio Alert
+                    </label>
+
+                    <label class="checkbox-label action-check">
+                        <input type="checkbox" name="action" value="notification" checked>
+                        System Notification
+                    </label>
+
+                    <label class="checkbox-label action-check">
+                        <input type="checkbox" name="action" value="macro" id="macro-checkbox">
+                        Execute Playwright Macro
+                    </label>
+                </div>
+
+                <div class="form-group" id="macro-editor-group" style="display: none;">
+                    <label for="macro-code">Playwright Javascript Code (Receives `page`)</label>
+                    <textarea id="macro-code" placeholder="await page.locator('button').click();" rows="5"></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" id="btn-start" class="btn primary">Start Bot</button>
+                    <button type="button" id="btn-stop" class="btn danger" disabled>Stop</button>
+                </div>
+                
+                <div class="live-controls" id="live-controls" style="display: none;">
+                    <button type="button" id="btn-pause" class="btn warning">Pause Monitoring</button>
+                    <button type="button" id="btn-resume" class="btn success" style="display: none;">Resume Monitoring</button>
+                </div>
+
+                <div class="danger-zone">
+                    <button type="button" id="btn-kill" class="btn shutdown">Kill Server</button>
+                </div>
+
+            </form>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="panel">
+                <h2>Activity Log</h2>
+                <div class="log-container" id="log-container">
+                    <div class="log-entry info">System initialized. Awaiting configuration...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden audio element for alert sound -->
+    <!-- We generate a simple beep via base64 audio to avoid needing an external file -->
+    <audio id="alert-sound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU" preload="auto"></audio>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app.js"></script>
+</body>
+</html>
