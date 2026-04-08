@@ -5,7 +5,7 @@
   "main": "server.js",
   "bin": "server.js",
   "scripts": {
-    "build": "npx @yao-pkg/pkg . --targets node18-win-x64 --output Observer.exe"
+    "build": "pkg . --targets node18-win-x64 --output Observer.exe && node set-icon.mjs"
   },
   "pkg": {
     "scripts": [
@@ -19,5 +19,10 @@
     "express": "^5.2.1",
     "playwright-core": "^1.59.1",
     "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg": "^6.14.2",
+    "png-to-ico": "^3.0.1",
+    "rcedit": "^5.0.2"
   }
 }
