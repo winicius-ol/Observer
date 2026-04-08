@@ -46,11 +46,30 @@ class BotInstance {
         
         this.browser = await chromium.launch({
             headless: this.config.headless,
-            channel: 'msedge'
+            channel: 'msedge',
+            args: [
+                '--disable-blink-features=AutomationControlled',
+                '--disable-infobars',
+                '--no-sandbox',
+                '--disable-setuid-sandbox'
+            ]
         });
         
-        this.context = await this.browser.newContext();
+        this.context = await this.browser.newContext({
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+            viewport: { width: 1366, height: 768 },
+            locale: 'en-US'
+        });
+        
         this.globalPage = await this.context.newPage();
+        
+        // Stealth Overrides
+        await this.context.addInitScript(() => {
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            window.chrome = { runtime: {} };
+            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3] });
+            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+        });
 
         try {
             const match = this.config.regex.match(new RegExp('^/(.*?)/([gimy]*)$'));
