@@ -3,22 +3,18 @@ const socket = io();
 // UI Elements
 const form = document.getElementById('setup-form');
 const btnStart = document.getElementById('btn-start');
-const btnStop = document.getElementById('btn-stop');
-const btnPause = document.getElementById('btn-pause');
-const btnResume = document.getElementById('btn-resume');
 const btnKill = document.getElementById('btn-kill');
 const logContainer = document.getElementById('log-container');
 const macroCheckbox = document.getElementById('macro-checkbox');
 const macroEditorGroup = document.getElementById('macro-editor-group');
-const audioPlayer = document.getElementById('alert-sound');
-const liveControls = document.getElementById('live-controls');
+const activeBotsList = document.getElementById('active-bots-list');
 
-// Toggle Macro Editor
+const currentBots = new Map();
+
 macroCheckbox.addEventListener('change', (e) => {
     macroEditorGroup.style.display = e.target.checked ? 'block' : 'none';
 });
 
-// Appending Logs
 function appendLog(level, message) {
     const el = document.createElement('div');
     el.className = `log-entry ${level}`;
@@ -28,75 +24,80 @@ function appendLog(level, message) {
     logContainer.scrollTop = logContainer.scrollHeight;
 }
 
-// Form Submission (Start Bot)
+function renderActiveBots() {
+    activeBotsList.innerHTML = '';
+    if (currentBots.size === 0) {
+        activeBotsList.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">No bots running.</span>';
+        return;
+    }
+
+    for (const [id, botInfo] of currentBots.entries()) {
+        const card = document.createElement('div');
+        card.className = 'bot-card';
+        
+        const info = document.createElement('div');
+        info.className = 'bot-card-info';
+        info.innerHTML = `<strong>Bot #${id}</strong><span>Regex: ${botInfo.config.regex}</span>`;
+        
+        const controls = document.createElement('div');
+        controls.className = 'bot-controls';
+        
+        const btnPause = document.createElement('button');
+        btnPause.className = 'btn warning';
+        btnPause.textContent = botInfo.status === 'paused' ? 'Resume' : 'Pause';
+        btnPause.onclick = () => socket.emit(botInfo.status === 'paused' ? 'resume-bot' : 'pause-bot', id);
+        
+        const btnStop = document.createElement('button');
+        btnStop.className = 'btn danger';
+        btnStop.textContent = 'Stop';
+        btnStop.onclick = () => socket.emit('stop-bot', id);
+        
+        controls.appendChild(btnPause);
+        controls.appendChild(btnStop);
+        card.appendChild(info);
+        card.appendChild(controls);
+        
+        activeBotsList.appendChild(card);
+    }
+}
+
 form.addEventListener('submit', (e) => {
     e.preventDefault();
-    
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission();
     }
     
-    const targetUrl = document.getElementById('target-url').value;
-    const regex = document.getElementById('regex-pattern').value;
-    const headless = document.getElementById('headless').checked;
-    const macroCode = document.getElementById('macro-code').value;
-    
-    const actions = [];
-    document.querySelectorAll('input[name="action"]:checked').forEach(cb => {
-        actions.push(cb.value);
-    });
-
     const config = {
-        targetUrl,
-        regex,
-        headless,
-        actions,
-        macroCode
+        targetUrl: document.getElementById('target-url').value,
+        regex: document.getElementById('regex-pattern').value,
+        headless: document.getElementById('headless').checked,
+        actions: Array.from(document.querySelectorAll('input[name="action"]:checked')).map(cb => cb.value),
+        macroCode: document.getElementById('macro-code').value
     };
 
-    btnStart.disabled = true;
     socket.emit('start-bot', config);
 });
 
-// Button Controls
-btnStop.addEventListener('click', () => {
-    socket.emit('stop-bot');
-});
-
-btnPause.addEventListener('click', () => {
-    socket.emit('pause-bot');
-});
-
-btnResume.addEventListener('click', () => {
-    socket.emit('resume-bot');
-});
-
 btnKill.addEventListener('click', () => {
-    if (confirm('Are you sure you want to kill the server? The dashboard will stop working immediately.')) {
+    if (confirm('Are you sure you want to kill the server? All bots will be terminated instantly.')) {
         socket.emit('kill-server');
     }
 });
 
-// Socket Events
 socket.on('log', (data) => {
     appendLog(data.level, data.message);
 });
 
 socket.on('bot-status', (data) => {
-    if (data.status === 'running') {
-        btnStart.disabled = true;
-        btnStop.disabled = false;
-        liveControls.style.display = 'flex';
-        btnPause.style.display = 'block';
-        btnResume.style.display = 'none';
-    } else if (data.status === 'stopped') {
-        btnStart.disabled = false;
-        btnStop.disabled = true;
-        liveControls.style.display = 'none';
-    } else if (data.status === 'paused') {
-        btnPause.style.display = 'none';
-        btnResume.style.display = 'block';
+    if (data.status === 'stopped') {
+        currentBots.delete(data.botId);
+    } else {
+        const existing = currentBots.get(data.botId) || { config: data.config };
+        existing.status = data.status;
+        if (data.config) existing.config = data.config;
+        currentBots.set(data.botId, existing);
     }
+    renderActiveBots();
 });
 
 socket.on('play-audio', () => {
@@ -125,8 +126,6 @@ socket.on('play-audio', () => {
 socket.on('show-notification', (data) => {
     if (Notification.permission === 'granted') {
         new Notification(data.title, { body: data.message });
-    } else {
-        appendLog('warning', 'Could not show desktop notification. Browser permission denied.');
     }
 });
 
@@ -137,3 +136,5 @@ socket.on('connect', () => {
 socket.on('disconnect', () => {
     appendLog('error', 'Disconnected from server.');
 });
+
+renderActiveBots();
