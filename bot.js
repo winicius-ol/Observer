@@ -12,7 +12,7 @@ function triggerNativeNotification(title, message) {
 $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
 $xml.LoadXml('<toast><visual><binding template="ToastText02"><text id="1">${title.replace(/[\'\"]/g, '')}</text><text id="2">${message.replace(/[\'\"]/g, '')}</text></binding></visual></toast>')
 $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("RoboDaFila").Show($toast)
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Observer").Show($toast)
 `;
     const tempFile = path.join(os.tmpdir(), `notify_${Date.now()}.ps1`);
     try {
@@ -113,10 +113,10 @@ class BotInstance {
                     
                     if (this.config.actions.includes('notification')) {
                         this.emit('show-notification', {
-                            title: `Robô da Fila - Bot #${this.id}`,
+                            title: `Observer - Bot #${this.id}`,
                             message: `Match triggered on network request!`
                         });
-                        triggerNativeNotification(`Robô da Fila - Bot #${this.id}`, 'Match triggered on network request!');
+                        triggerNativeNotification(`Observer - Bot #${this.id}`, 'Match triggered on network request!');
                     }
                     
                     if (this.config.actions.includes('audio')) {

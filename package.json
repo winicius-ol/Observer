@@ -1,11 +1,11 @@
 {
-  "name": "robo-da-fila",
+  "name": "observer",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
   "bin": "server.js",
   "scripts": {
-    "build": "npx @yao-pkg/pkg . --targets node18-win-x64 --output RoboDaFila.exe"
+    "build": "npx @yao-pkg/pkg . --targets node18-win-x64 --output Observer.exe"
   },
   "pkg": {
     "scripts": [
