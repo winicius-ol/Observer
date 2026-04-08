@@ -1,5 +1,27 @@
-const { chromium } = require('playwright');
-const notifier = require('node-notifier');
+const { chromium } = require('playwright-core');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { exec } = require('child_process');
+
+function triggerNativeNotification(title, message) {
+    const scriptContent = `
+[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+[Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
+$xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+$xml.LoadXml('<toast><visual><binding template="ToastText02"><text id="1">${title.replace(/[\'\"]/g, '')}</text><text id="2">${message.replace(/[\'\"]/g, '')}</text></binding></visual></toast>')
+$toast = New-Object Windows.UI.Notifications.ToastNotification $xml
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("RoboDaFila").Show($toast)
+`;
+    const tempFile = path.join(os.tmpdir(), `notify_${Date.now()}.ps1`);
+    try {
+        fs.writeFileSync(tempFile, scriptContent);
+        exec(`powershell -NoProfile -ExecutionPolicy Bypass -File "${tempFile}"`, () => {
+            try { fs.unlinkSync(tempFile); } catch(e){}
+        });
+    } catch(e) {}
+}
 
 let browser = null;
 let context = null;
@@ -15,6 +37,7 @@ async function startBot(config, emit) {
     
     browser = await chromium.launch({
         headless: config.headless,
+        channel: 'msedge' // Automates the local Microsoft Edge so friends don't need to download a browser!
     });
     
     context = await browser.newContext();
@@ -59,11 +82,12 @@ async function startBot(config, emit) {
                 
                 // Trigger Actions
                 if (config.actions.includes('notification')) {
-                    notifier.notify({
+                    emit('show-notification', {
                         title: 'Robô da Fila',
-                        message: `Match triggered on network request!`,
-                        sound: true,
+                        message: `Match triggered on network request!`
                     });
+                    // Fallback to Native Windows OS Toaster
+                    triggerNativeNotification('Robô da Fila', 'Match triggered on network request!');
                 }
                 
                 if (config.actions.includes('audio')) {

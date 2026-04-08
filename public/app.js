@@ -32,6 +32,10 @@ function appendLog(level, message) {
 form.addEventListener('submit', (e) => {
     e.preventDefault();
     
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+    
     const targetUrl = document.getElementById('target-url').value;
     const regex = document.getElementById('regex-pattern').value;
     const headless = document.getElementById('headless').checked;
@@ -96,11 +100,34 @@ socket.on('bot-status', (data) => {
 });
 
 socket.on('play-audio', () => {
-    // Play the alert sound
-    audioPlayer.currentTime = 0;
-    audioPlayer.play().catch(e => {
-        appendLog('warning', 'Browser prevented auto-play audio. Please interact with the page once.');
-    });
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+        gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(1, audioCtx.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.3);
+        gainNode.gain.setValueAtTime(1, audioCtx.currentTime + 0.4);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        oscillator.stop(audioCtx.currentTime + 0.6);
+    } catch(e) {
+        appendLog('error', 'Audio alert failed: ' + e.message);
+    }
+});
+
+socket.on('show-notification', (data) => {
+    if (Notification.permission === 'granted') {
+        new Notification(data.title, { body: data.message });
+    } else {
+        appendLog('warning', 'Could not show desktop notification. Browser permission denied.');
+    }
 });
 
 socket.on('connect', () => {

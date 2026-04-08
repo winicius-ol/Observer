@@ -2,18 +2,22 @@
   "name": "robo-da-fila",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
+  "bin": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx @yao-pkg/pkg . --targets node18-win-x64 --output RoboDaFila.exe"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "pkg": {
+    "scripts": [
+      "bot.js"
+    ],
+    "assets": [
+      "public/**/*"
+    ]
+  },
   "dependencies": {
     "express": "^5.2.1",
-    "node-notifier": "^10.0.1",
-    "playwright": "^1.59.1",
+    "playwright-core": "^1.59.1",
     "socket.io": "^4.8.3"
   }
 }
