@@ -24,5 +24,8 @@
     "@yao-pkg/pkg": "^6.14.2",
     "png-to-ico": "^3.0.1",
     "rcedit": "^5.0.2"
+  },
+  "overrides": {
+    "into-stream": "6.0.0"
   }
 }
